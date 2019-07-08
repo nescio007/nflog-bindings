@@ -1,4 +1,3 @@
-
 // Grab a Python function object as a Python object.
 %typemap(in) PyObject *pyfunc {
   if (!PyCallable_Check($input)) {
@@ -13,13 +12,14 @@
 #include <linux/netfilter.h>
 #include <linux/ip.h>
 
+#include <nflog.h>
 #include <nflog_utils.h>
 
 int  swig_nflog_callback(struct nflog_g_handle *gh, struct nfgenmsg *nfmsg,
                        struct nflog_data *nfad, void *data)
 {
         int id = 0;
-        struct nfulnl_msg_packet_hdr *ph;
+        //struct nfulnl_msg_packet_hdr *ph;
         char *payload_data;
         int payload_len;
 
@@ -28,17 +28,13 @@ int  swig_nflog_callback(struct nflog_g_handle *gh, struct nfgenmsg *nfmsg,
                 return -1;
         }
 
-        ph = nflog_get_msg_packet_hdr(nfad);
         /*
+        ph = nflog_get_msg_packet_hdr(nfad);
         if (ph){
                 id = ntohl(ph->packet_id);
-        }
-        */
+        }*/
 
         payload_len = nflog_get_payload(nfad, &payload_data);
-
-        /*printf("callback called\n");
-        printf("callback argument: %p\n",data);*/
 
         {
                 PyObject *func, *arglist, *payload_obj;
@@ -77,17 +73,14 @@ int  swig_nflog_callback(struct nflog_g_handle *gh, struct nfgenmsg *nfmsg,
 
 void raise_swig_error(const char *errstr)
 {
-        //fprintf(stderr,"ERROR %s\n",errstr);
-        SWIG_Error(SWIG_RuntimeError, errstr); 
+        SWIG_Error(SWIG_RuntimeError, errstr);
 }
 %}
 
 %extend log {
-
 int set_callback(PyObject *pyfunc)
 {
         self->_cb = (void*)pyfunc;
-        /*printf("callback argument: %p\n",pyfunc);*/
         Py_INCREF(pyfunc);
         return 0;
 }
@@ -103,21 +96,21 @@ int loop()
 		nflog_handle_packet(self->_h, buf, rv);
 		Py_UNBLOCK_THREADS
 	}
-	Py_END_ALLOW_THREADS
+        Py_END_ALLOW_THREADS
 
-	return 0;
+        return 0;
 }
 
 };
 
 %typemap (out) const char* get_data {
-        $result = PyString_FromStringAndSize($1,arg1->len);
+        $result = PyBytes_FromStringAndSize($1,arg1->len);
 }
 
 %typemap (out) const char* get_hwhdr {
         uint16_t hwhdr_len;
         hwhdr_len = nflog_get_msg_packet_hwhdrlen(arg1->nfad);
-        $result = PyString_FromStringAndSize($1,hwhdr_len);
+        $result = PyBytes_FromStringAndSize($1,hwhdr_len);
 }
 
 %extend log_payload {

@@ -30,11 +30,7 @@ enum CopyMode {
 %feature("autodoc","1");
 %include docstrings.i
 
-#if defined(SWIGPYTHON)
-%include python/nflog_python.i
-#elif defined(SWIGPERL)
-%include perl/nflog_perl.i
-#endif
+%include nflog.i
 
 %extend log {
 
