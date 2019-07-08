@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 # need root privileges
 
@@ -18,51 +18,51 @@ l = nflog.log()
 
 def cb(payload):
     try:
-        print ""
-        print "Packet received [%d]" % payload.get_seq()
+        print("")
+        print("Packet received [%d]" % payload.get_seq())
 
         try:
             tv = payload.get_timestamp()
             d = datetime.fromtimestamp(tv.tv_sec + (tv.tv_usec / 1000000.))
-            print "timestamp: ", d
-        except RuntimeError, e:
-            #print e.args[0]
+            print("timestamp: ", d)
+        except RuntimeError as e:
+            #print(e.args[0])
             pass
         data = payload.get_data()
         pkt = IP(data)
         if pkt:
             pkt.show()
         else:
-            print "Error decoding packet"
+            print("Error decoding packet")
 
         sys.stdout.flush()
         return 1
     except KeyboardInterrupt:
-        print "interrupted in callback"
+        print("interrupted in callback")
         global l
-        print "stop the loop"
+        print("stop the loop")
         l.stop_loop()
 
-print "setting callback"
+print("setting callback")
 l.set_callback(cb)
 
-print "open"
+print("open")
 l.fast_open(1, AF_INET)
 l.set_flags(nflog.CfgSeq)
 
-print "prepare"
+print("prepare")
 l.prepare()
 
-print "loop nflog device until SIGINT"
+print("loop nflog device until SIGINT")
 try:
     l.loop()
-except KeyboardInterrupt, e:
-	print "loop() was interrupted"
+except KeyboardInterrupt as e:
+	print("loop() was interrupted")
 
 
-print "unbind"
+print("unbind")
 l.unbind(AF_INET)
 
-print "close"
+print("close")
 l.close()
 
